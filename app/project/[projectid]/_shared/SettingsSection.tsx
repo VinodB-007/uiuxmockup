@@ -1,15 +1,24 @@
 "use client"
 import { Button } from "@/components/ui/button";
 import { THEME_NAME_LIST, THEMES } from "@/data/Themes";
+import { projectType } from "@/type/types";
 import { Camera, Share, Sparkles } from "lucide-react";;
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-function SettingsSection() {
+
+type props={
+  projectDetail:projectType| undefined
+}
+function SettingsSection({projectDetail}:props) {
 
 
     const [selectedTheme,setSelectedTheme]=useState('AURORA_INK')
-    const [projectName,setProjectName]=useState('');
+    const [projectName,setProjectName]=useState(projectDetail?.projectName);
     const [userNewScreenInput,setUserNewScreenInput]=useState<string>()
+
+    useEffect(()=>{
+      projectDetail&&setProjectName(projectDetail?.projectName)
+    },[projectDetail])
 
   return (
     <div className="w-[300px] h-[90vh] p-5 border-r">
@@ -20,6 +29,7 @@ function SettingsSection() {
 
         <input
           placeholder="Project Name"
+          value={projectName}
        onChange={(event) => setProjectName(event.target.value)}
         />
 
