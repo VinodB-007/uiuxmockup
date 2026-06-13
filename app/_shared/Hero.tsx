@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text";
 import { suggestions } from "@/data/constent";
 import axios from "axios";
+import { projectInvalidateFileSystemCache } from "next/dist/build/swc/generated-native";
 
 function Hero() {
   const [userInput, setUserInput] = useState("");
@@ -34,37 +35,37 @@ function Hero() {
   const router = useRouter();
 
   const onCreateProject = async () => {
-    try {
-      if (!user) {
-        router.push("/sign-in");
-        return;
-      }
-
-      if (!userInput.trim()) {
-        return;
-      }
-
-      setLoading(true);
-
-      const projectId = crypto.randomUUID();
-
-      const result = await axios.post("/api/project", {
-        userInput,
-        device,
-        projectId,
-      });
-
-      console.log("Project Created:", result.data);
-
-      // redirect after project creation
-    //   router.push(`/workspace/${projectId}`);
-    router.push("/");
-    } catch (error) {
-      console.error("Project Creation Error:", error);
-    } finally {
-      setLoading(false);
+  try {
+    if (!user) {
+      router.push("/sign-in");
+      return;
     }
-  };
+
+    if (!userInput.trim()) {
+      return;
+    }
+
+    setLoading(true);
+
+    const projectId = crypto.randomUUID();
+
+    const result = await axios.post("/api/project", {
+      userInput,
+      device,
+      projectId,
+    });
+
+    console.log(result.data);
+
+    router.push("/project/" + projectId);
+
+  } catch (error) {
+    console.error("Project Creation Error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="p-10 md:px-24 lg:px-48 xl:px-60 mt-8">
