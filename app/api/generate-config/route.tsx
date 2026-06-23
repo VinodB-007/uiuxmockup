@@ -6,60 +6,99 @@ import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { userInput, deviceType, projectId } = await req.json();
+  try {
+    const { userInput, deviceType, projectId } =
+      await req.json();
 
-  const aiResult = await openrouter.chat.send({
-  chatRequest: {
-    model: "openai/gpt-oss-120b:free",
-    messages: [
-      {
-        role: "system",
-        content: APP_LAYOUT_CONFIG_PROMPT.replace(
-          "{deviceType}",
-          deviceType
-        ),
+    const aiResult = await openrouter.chat.send({
+      chatRequest: {
+        model: "openai/gpt-oss-120b:free",
+        messages: [
+          {
+            role: "system",
+            content:
+              APP_LAYOUT_CONFIG_PROMPT.replace(
+                "{deviceType}",
+                deviceType
+              ),
+          },
+          {
+            role: "user",
+            content: userInput,
+          },
+        ],
+        stream: false,
       },
-      {
-        role: "user",
-        content: userInput,
-      },
-    ],
-    stream: false,
-  },
-});
-  
-   const JSONAiResult=JSON.parse(aiResult?.choices[0]?.message?.content as string)
+    });
 
+    const rawContent =
+      aiResult?.choices?.[0]?.message?.content || "";
 
+    console.log("RAW AI RESPONSE:", rawContent);
 
-   if (JSONAiResult)
-   {
-   
-// Update project Table with Projeect Name 
-await db.update(ProjectTable).set({
-    projctVisualDecription:JSONAiResult?.projectVisualDescription,
-    projectName:JSONAiResult?.projectName,
-    theme:JSONAiResult?.theme,
-    // @ts-ignore
-}).where(eq(ProjectTable.projectId,projectId as string))
+    const cleanContent = rawContent
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
 
+    const JSONAiResult = JSON.parse(cleanContent);
 
-// insert screen config
-   JSONAiResult.screens?.forEach(async(screen:any)=>{
-    const result=await db.insert(ScreenConfigTable).values({
-        projectId:projectId,
-        purpose:screen?.purpose,
-        screenDescription:screen?.layoutDescription,
-        screenId:screen?.id,
-        screenName:screen?.name
-    })
-   })
-     return NextResponse.json(JSONAiResult);
-}
-else{
-    NextResponse.json({msg:"Internal Server Error"})
-}
+    console.log("PARSED JSON:", JSONAiResult);
 
+    if (!JSONAiResult) {
+      return NextResponse.json(
+        { msg: "Invalid AI Response" },
+        { status: 500 }
+      );
+    }
 
+    await db
+      .update(ProjectTable)
+      .set({
+        projctVisualDecription:
+          JSONAiResult?.projectVisualDescription,
+        projectName: JSONAiResult?.projectName,
+        theme: JSONAiResult?.theme,
+      })
+      .where(
+        eq(
+          ProjectTable.projectId,
+          projectId as string
+        )
+      );
 
+    // delete old screens
+    await db
+      .delete(ScreenConfigTable)
+      .where(
+        eq(
+          ScreenConfigTable.projectId,
+          projectId as string
+        )
+      );
+
+    // insert screens properly
+    for (const screen of JSONAiResult.screens || []) {
+      await db.insert(ScreenConfigTable).values({
+        projectId,
+        purpose: screen?.purpose,
+        screenDescription:
+          screen?.layoutDescription,
+        screenId: screen?.id,
+        screenName: screen?.name,
+      });
+    }
+
+    return NextResponse.json(JSONAiResult);
+  } catch (error) {
+    console.error(
+      "GENERATE CONFIG ERROR:",
+      error
+    );
+
+    return NextResponse.json(
+      { msg: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }

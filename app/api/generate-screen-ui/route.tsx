@@ -42,7 +42,10 @@ const updateResult=await db.update(ScreenConfigTable)
 eq(ScreenConfigTable?.screenId,screenId as string)))
 .returning()
 
-    return NextResponse.json(updateResult[0])
+    return NextResponse.json({
+  success: true,
+  
+});
 }
  catch (e) {
   console.log("GENERATE SCREEN ERROR:", e);
