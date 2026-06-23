@@ -47,11 +47,14 @@ function ProjectCanvasPlayground() {
   };
 
   useEffect(() => {
-    if (projectDetail && screenConfig.length === 0) {
-      console.log("GENERATE CONFIG CALLED");
-      generateScreenConfig();
-    }
-  }, [projectDetail, screenConfig]);
+  if (!projectDetail) return;
+
+  if (screenConfig.length === 0) {
+    generateScreenConfig();
+  } else {
+    GenerateScreenUIUX();
+  }
+}, [projectDetail, screenConfig]);
 
   const generateScreenConfig = async () => {
     try {
@@ -78,7 +81,58 @@ function ProjectCanvasPlayground() {
     }
   };
 
+// const GenerateScreenUIUX=async()=>{
+//   setLoading(true);
+  
+//   for (let index=0;index<screenConfig?.length;index++)
+//   {
+//     const screen=screenConfig[index];
+//     if (screen?.code) continue;
+//     setLoadingMsg(`Generating Screen ${index + 1}`);
 
+//     const result =await axios.post('/api/generate-screen-ui',{
+//       projectId,
+//       screenId:screen?.screenId,
+//       screenName:screen?.screenName,
+//       purpose:screen?.purpose,
+//       screenDescription:screen?.screenDescription
+//     })
+//     console.log(result.data)
+
+//   }
+
+
+//   setLoading(false)
+// }
+const GenerateScreenUIUX = async () => {
+  try {
+    setLoading(true);
+
+    for (let index = 0; index < screenConfig.length; index++) {
+      const screen = screenConfig[index];
+
+      if (screen?.code) continue;
+
+      setLoadingMsg(`Generating Screen ${index + 1}`);
+
+      const result = await axios.post("/api/generate-screen-ui", {
+        projectId,
+        screenId: screen.screenId,
+        screenName: screen.screenName,
+        purpose: screen.purpose,
+        screenDescription: screen.screenDescription,
+      });
+      
+      setScreenConfig(prev=>prev.map((item,i) =>(
+        i===index? result.data :item
+      )))
+    }
+  } catch (error) {
+    console.error("GENERATE UI ERROR:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div>
