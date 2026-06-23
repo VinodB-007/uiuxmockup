@@ -14,6 +14,7 @@ export type screenConfig={
     screenName:string,
     purpose:string,
     screenConfiguration:string,
+    screenDescription:string,
     code?:string,
 }
 
