@@ -3,17 +3,20 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { RefreshDataContext } from "@/context/RefreshDataContext";
 import { SettingContext } from "@/context/SettingContext";
 import { THEME_NAME_LIST, THEMES } from "@/data/Themes";
 import { projectType } from "@/type/types";
-import { Camera, Share, Sparkles } from "lucide-react";
+import axios from "axios";
+import { Camera, Loader2Icon, LoaderIcon, Share, Sparkles } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 
 type props = {
   projectDetail: projectType | undefined;
+  screenDescription: string | undefined;
 };
 
-function SettingsSection({ projectDetail }: props) {
+function SettingsSection({ projectDetail,screenDescription}: props) {
   const [selectedTheme, setSelectedTheme] = useState("AURORA_INK");
 
   // FIXED
@@ -21,6 +24,10 @@ function SettingsSection({ projectDetail }: props) {
 
   const [userNewScreenInput, setUserNewScreenInput] = useState("");
   const {settingDetail,setSettingDetail}=useContext(SettingContext)
+  const [loading,setLoading]=useState(false)
+  const [loadingMsg,setLoadingMsg]=useState("Loading");
+  const {refreshData, setRefreshData} = useContext(RefreshDataContext);
+  
 
 useEffect(() => {
   projectDetail && setProjectName(projectDetail.projectName??"");
@@ -35,10 +42,41 @@ const  onThemeSelect=(theme:string)=>{
   }))
 }
 
+const GenerateNewScreen=async()=>{
+  try{
+    setLoading(true);
+
+    const resut=await axios.post("/api/generate-config",{
+      projectId:projectDetail?.projectId,
+      projectName:projectDetail?.projectName,
+      deviceType:projectDetail?.device,
+      theme:projectDetail?.theme,
+      oldScreenDescription:screenDescription,
+    });
+
+    console.log(resut.data);
+    setRefreshData({
+      method:"screenConfig",
+      data:Date.now()
+    });
+    setLoading(false);
+  }
+  catch(e){
+    setLoading(false);
+  }
+};
+
   return (
     <div className="w-[300px] h-[90vh] p-5 border-r">
       <h2 className="font-medium text-lg">Settings</h2>
-
+{loading && (
+          <div className="p-3 absolute bg-blue-300/20 border-blue-400 border rounded-xl left-1/2 top-20">
+            <h2 className="flex gap-2 items-center">
+              <LoaderIcon className="animate-spin" />
+              {loadingMsg}
+            </h2>
+          </div>
+        )}
       <div className="mt-4">
         <h2 className="text-sm mb-1">Project Name</h2>
 
@@ -67,8 +105,13 @@ const  onThemeSelect=(theme:string)=>{
         />
       </div>
 
-      <Button size="sm" className="mt-3 w-full">
-        <Sparkles className="w-4 h-4 mr-2" />
+      <Button
+        size="sm"
+        disabled={loading}
+        className="mt-3 w-full"
+        onClick={GenerateNewScreen}
+      >
+        {loading ? <Loader2Icon className="animate-spin" /> : <Sparkles />}
         Generate With AI
       </Button>
 

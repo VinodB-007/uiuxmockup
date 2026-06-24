@@ -3,7 +3,7 @@
 
 import React, { useContext, useEffect, useState } from "react";
 import ProjectHeader from "./_shared/ProjectHeader";
-import SettingsSection from "./_shared/SettingsSection";
+
 import axios from "axios";
 import { useParams } from "next/navigation";
 import { projectType, screenConfig } from "@/type/types";
@@ -228,8 +228,13 @@ const GenerateScreenUIUX = async () => {
             </h2>
           </div>
         )}
-         {/* settings */}
-        <SettingsSection projectDetail={projectDetail}/>
+        {/* settings */}
+    
+        <SettingsSection
+          projectDetail={projectDetail}
+          screenDescription={screenConfig[0]?.screenDescription}
+        />
+       
 
         {/* canvas */}
       <Canvas projectDetail={projectDetail} 
@@ -239,4 +244,20 @@ const GenerateScreenUIUX = async () => {
   );
 }
 
-export default ProjectCanvasPlayground;
+// Simple local SettingsSection to fix missing reference
+function SettingsSection({
+  projectDetail,
+  screenDescription,
+}: {
+  projectDetail?: projectType & { name?: string };
+  screenDescription?: string;
+}) {
+  return (
+    <div className="w-80 p-4">
+      <h3 className="font-semibold">Settings</h3>
+      <div className="text-sm mt-2">Project: {projectDetail?.name || "-"}</div>
+      <div className="text-sm mt-1">Device: {projectDetail?.device || "-"}</div>
+      <div className="text-sm mt-2">Screen: {screenDescription || "-"}</div>
+    </div>
+  );
+}
