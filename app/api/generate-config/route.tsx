@@ -122,14 +122,14 @@
   import { db } from "@/config/db";
   import { openrouter } from "@/config/openrouter";
   import { ProjectTable, ScreenConfigTable } from "@/config/schema";
-  import { APP_LAYOUT_CONFIG_PROMPT } from "@/data/Prompt";
+  import { APP_LAYOUT_CONFIG_PROMPT, GENRATE_NEW_SCREEN_IN_EXISITING_PROJECT_PROJECT } from "@/data/Prompt";
 import { currentUser } from "@clerk/nextjs/server";
   import { and, eq } from "drizzle-orm";
   import { NextRequest, NextResponse } from "next/server";
 
   export async function POST(req: NextRequest) {
     try {
-      const { userInput, deviceType, projectId } =
+      const { userInput, deviceType, projectId,oldScreenDescription,theme } =
         await req.json();
 
       const aiResult = await openrouter.chat.send({
@@ -138,14 +138,16 @@ import { currentUser } from "@clerk/nextjs/server";
           messages: [
             {
               role: "system",
-              content: APP_LAYOUT_CONFIG_PROMPT.replace(
+              content: oldScreenDescription?
+              GENRATE_NEW_SCREEN_IN_EXISITING_PROJECT_PROJECT.replace("{deviceType}",deviceType).replace("{theme}",theme):
+              APP_LAYOUT_CONFIG_PROMPT.replace(
                 "{deviceType}",
                 deviceType
               ),
             },
             {
               role: "user",
-              content: userInput,
+              content: oldScreenDescription? userInput+"old screen discription is:"+oldScreenDescription:userInput
             },
           ],
           stream: false,
@@ -174,7 +176,7 @@ import { currentUser } from "@clerk/nextjs/server";
       }
 
       // Update Project
-      await db
+      !oldScreenDescription&& await db
         .update(ProjectTable)
         .set({
           projctVisualDecription:
