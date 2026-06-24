@@ -25,7 +25,7 @@ function ProjectHeader() {
     } catch (e) {
       setLoading(false);
       toast.error("Internal Server Error");
-    }
+    }}
   return (
     <div className='flex items-center justify-between p-3 shadow'>
       <div className="flex gap-2 items-center">
