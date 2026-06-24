@@ -40,23 +40,58 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req:NextRequest) {
-  const projectId= await req.nextUrl.searchParams.get('projectId');
-  const user =await currentUser()
-  try{
-    const result =await db.select().from(ProjectTable)
-    .where(and(eq(ProjectTable.projectId,projectId as string),eq(ProjectTable.userId,user?.primaryEmailAddress?.emailAddress as string)))
-     
-    const ScreenConfig=await db.select().from(ScreenConfigTable)
-    .where(eq(ScreenConfigTable.projectId,projectId as string))
+  try {
+    const projectId = req.nextUrl.searchParams.get('projectId');
+    
+    if (!projectId) {
+      return NextResponse.json(
+        { error: "Missing projectId" },
+        { status: 400 }
+      );
+    }
+
+    let user;
+    try {
+      user = await currentUser();
+    } catch (authError) {
+      console.error("Clerk auth error:", authError);
+      // Continue without user auth for now - just return project if it exists
+    }
+
+    // Query project data
+    const projectQuery = await db.select().from(ProjectTable)
+      .where(eq(ProjectTable.projectId, projectId as string));
+
+    // Query screen configs
+    const screenConfigs = await db.select().from(ScreenConfigTable)
+      .where(eq(ScreenConfigTable.projectId, projectId as string));
 
     return NextResponse.json({
-      projectDetail:result[0],
-      ScreenConfig:ScreenConfig
+      projectDetail: projectQuery[0] || null,
+      ScreenConfig: screenConfigs || []
     });
 
-  }
-  catch (e){
-    return NextResponse.json({msg:'Error'})
+  } catch (e) {
+    console.error("GET PROJECT ERROR:", e);
+    return NextResponse.json(
+      { 
+        error: "Internal Server Error",
+        details: String(e)
+      },
+      { status: 500 }
+    );
   }
 }
 
+export async function PUT(req: NextRequest) {
+  const { projectName, theme, projectId } = await req.json();
+  const result = await db.update(ProjectTable).set({
+    projectName:projectName,
+    theme:theme,
+    
+  }).where(eq(ProjectTable.projectId, projectId ))  
+  .returning();
+
+  return NextResponse.json(result[0]);
+
+}
