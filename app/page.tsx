@@ -3,12 +3,14 @@ import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import Header from "./_shared/Header";
 import Hero from "./_shared/Hero";
+import ProjectList from "./_shared/ProjectList";
 
 export default function Home() {
   return (
     <div>
       <Header/>
       <Hero/>
+      <ProjectList/>
       <div className=" absolute -top-40 -left-40 
       h-[500px] w-[500px] bg-purple-400/20 blur-[120px] rounded-full"/>
        <div className=" absolute top-20 right-[-200px] 

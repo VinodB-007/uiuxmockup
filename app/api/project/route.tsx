@@ -2,7 +2,7 @@ import { db } from "@/config/db";
 import { ProjectTable, ScreenConfigTable } from "@/config/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { error } from "console";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -41,17 +41,21 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req:NextRequest) {
   try {
-    const projectId = req.nextUrl.searchParams.get('projectId');
+    const projectId = await req.nextUrl.searchParams.get('projectId');
     
     if (!projectId) {
-      return NextResponse.json(
-        { error: "Missing projectId" },
-        { status: 400 }
-      );
+    const result = await db.select().from(ProjectTable)
+    .where(eq(ProjectTable.userId,user?.primaryEmailAddress?.emailAddress as string));
+    .orderBy(desc(ProjectTable.id));
+
+
+    return NextResponse.json(result);
     }
 
     let user;
     try {
+
+
       user = await currentUser();
     } catch (authError) {
       console.error("Clerk auth error:", authError);
@@ -95,4 +99,8 @@ export async function PUT(req: NextRequest) {
 
   return NextResponse.json(result[0]);
 
+}
+
+function orderBy(arg0: SQL<unknown>) {
+  throw new Error("Function not implemented.");
 }
