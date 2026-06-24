@@ -68,7 +68,6 @@ export async function POST(req:NextRequest) {
       });
     }
     catch (e) {
-      console.error("GENERATE SCREEN ERROR:", e);
       return NextResponse.json(
         { 
           error: "Internal Server Error",
