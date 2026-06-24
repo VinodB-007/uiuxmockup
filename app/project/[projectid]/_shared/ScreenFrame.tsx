@@ -15,8 +15,9 @@ type props={
     htmlCode:string|undefined,
     projectDetail:projectType |undefined,
     screen:screenConfig |undefined  ,
+    iframeRef:any,
 }
-function ScreenFrame({x,y,setPanningEnabled,width,height,htmlCode,projectDetail,screen}:props) {
+function ScreenFrame({x,y,setPanningEnabled,width,height,htmlCode,projectDetail,screen,iframeRef}:props) {
 
       const {settingDetail,setSettingDetail}=useContext(SettingContext)
  
@@ -26,7 +27,7 @@ const themeKey = (settingDetail?.theme ??
   "light") as keyof typeof THEMES;
 
 const theme = THEMES[themeKey];
-const iframeRef= useRef<HTMLIFrameElement|null>(null);
+// const iframeRef= useRef<HTMLIFrameElement|null>(null);
 
 const [size,setSize]=useState({width,height});
 
