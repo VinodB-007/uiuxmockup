@@ -78,6 +78,7 @@ const Controls = () => {
  key={screen.screenId} setPanningEnabled={setPanningEnabled}
  htmlCode={screen?.code}
  projectDetail={projectDetail}
+ screen={screen}
 
  />:
  <div className='bg-white rounded-2xl p-5 gap-4 flex flex-col'

@@ -1,9 +1,11 @@
 import { SettingContext } from '@/context/SettingContext';
 import { THEMES, themeToCssVars } from '@/data/Themes';
-import { projectType } from '@/type/types';
+import { projectType, screenConfig } from '@/type/types';
 import { GripVertical } from 'lucide-react'
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {Rnd, } from "react-rnd"
+import ScreenHandler from './ScreenHandler';
+import { HtmlWrapper } from '@/data/constent';
 type props={
     x:number,
     y:number,
@@ -12,8 +14,9 @@ type props={
     height:number,
     htmlCode:string|undefined,
     projectDetail:projectType |undefined,
+    screen:screenConfig |undefined  ,
 }
-function ScreenFrame({x,y,setPanningEnabled,width,height,htmlCode,projectDetail}:props) {
+function ScreenFrame({x,y,setPanningEnabled,width,height,htmlCode,projectDetail,screen}:props) {
 
       const {settingDetail,setSettingDetail}=useContext(SettingContext)
  
@@ -25,39 +28,19 @@ const themeKey = (settingDetail?.theme ??
 const theme = THEMES[themeKey];
 const iframeRef= useRef<HTMLIFrameElement|null>(null);
 
- 
-const html = `
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Google Font -->
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
-
-<!-- Tailwind + Iconify -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
-  <style >
-    ${themeToCssVars(projectDetail?.theme)}
-  </style>
-</head>
-<body class="bg-[var(--background)] text-[var(--foreground)] w-full">
-  ${htmlCode ?? ""}
-</body>
-</html>
-`;
-
 const [size,setSize]=useState({width,height});
+
+const resizingLockRef = useRef(false);
+const lastThemeRef = useRef<string|undefined>(undefined);
+
+ 
+const html=HtmlWrapper(theme,htmlCode as string);
 
 useEffect(()=>{
   setSize({width,height});
 
 },[height,width]) 
+
 
 
 const measureIframeHeight = useCallback(() => {
@@ -156,7 +139,10 @@ useEffect(() => {
    }}
    >
     <div className='drag-handle flex gap-2 items-center cursor-move bg-white rounded-lg p-4 '>
-        <GripVertical className='text-gary-500 h-4 w-4'/>Drag Here
+       
+        <ScreenHandler screen={screen} theme={theme} iframeRef={iframeRef} 
+        projectId={projectDetail?.projectId}
+        />
     </div>
    <iframe
    ref={iframeRef}
