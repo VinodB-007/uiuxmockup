@@ -6,6 +6,7 @@
     createdOn:string,
     projectName?:string,
     theme?:string,
+    screenshot?:string,
 }
 
 export type screenConfig={
