@@ -14,9 +14,10 @@ import React, { useContext, useEffect, useState } from "react";
 type props = {
   projectDetail: projectType | undefined;
   screenDescription: string | undefined;
+  takeScreenShot:any,
 };
 
-function SettingsSection({ projectDetail,screenDescription}: props) {
+function SettingsSection({ projectDetail,screenDescription ,takeScreenShot}: props) {
   const [selectedTheme, setSelectedTheme] = useState("AURORA_INK");
 
   // FIXED
@@ -187,7 +188,8 @@ const GenerateNewScreen=async()=>{
         <Button
           size={"sm"}
           variant={"outline"}
-          className="mt-3"
+          className="mt-2"
+          onClick={()=>takeScreenShot()}
         >
           <Camera />
           Screenshot
@@ -196,7 +198,7 @@ const GenerateNewScreen=async()=>{
         <Button
           size={"sm"}
           variant={"outline"}
-          className="mt-3"
+          className="mt-2"
         >
           <Share />
           Share

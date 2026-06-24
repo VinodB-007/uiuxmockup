@@ -22,10 +22,10 @@ export const ProjectTable = pgTable("projects", {
   createdOn: date().defaultNow(),
   config: json(),
   projctVisualDecription: text(),
-
   userId: varchar()
     .references(() => usersTable.email)
     .notNull(),
+    screenShot: text(),
 });
 
 export const ScreenConfigTable=pgTable('screenConfig',{

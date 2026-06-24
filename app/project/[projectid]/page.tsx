@@ -11,6 +11,8 @@ import { LoaderIcon } from "lucide-react";
 import Canvas from "./_shared/Canvas";
 import { SettingContext } from "@/context/SettingContext";
 import { RefreshDataContext } from "@/context/RefreshDataContext";
+import { date } from "drizzle-orm/mysql-core";
+import SettingsSection from "./_shared/SettingsSection";
 
 
 function ProjectCanvasPlayground() {
@@ -26,6 +28,7 @@ const {settingDetail,setSettingDetail}=useContext(SettingContext);
   const {refreshData, setRefreshData} = useContext(RefreshDataContext);
   const [loading, setLoading] = useState(true);
   const [loadingMsg, setLoadingMsg] = useState("Loading");
+  const [takeScreenShot, setTakeScreenShot] = useState<any>();
 
   useEffect(() => {
     if (projectId) {
@@ -167,51 +170,34 @@ const GenerateScreenUIUX = async () => {
   try {
     setLoading(true);
 
-    console.log(
-      "TOTAL SCREENS:",
-      screenConfigOriginal.length
-    );
+    console.log("TOTAL SCREENS:", screenConfigOriginal.length);
 
-    for (
-      let index = 0;
-      index < screenConfigOriginal.length;
-      index++
-    ) {
-      const screen =
-        screenConfigOriginal[index];
+    for (let index = 0; index < screenConfigOriginal.length; index++) {
+      const screen = screenConfigOriginal[index];
 
       if (screen?.code) continue;
 
-      setLoadingMsg(
-        `Generating Screen ${index + 1}`
-      );
+      setLoadingMsg(`Generating Screen ${index + 1}`);
 
-      await axios.post(
-        "/api/generate-screen-ui",
-        {
-          projectId,
-          screenId: screen.screenId,
-          screenName: screen.screenName,
-          purpose: screen.purpose,
-          screenDescription:
-            screen.screenDescription,
-        }
-      );
+      const result = await axios.post("/api/generate-screen-ui", {
+        projectId,
+        screenId: screen.screenId,
+        screenName: screen.screenName,
+        purpose: screen.purpose,
+        screenDescription: screen?.screenDescription,
+      });
 
-      console.log(
-        "SCREEN GENERATED:",
-        screen.screenName
+      setScreenConfig((prev) =>
+        prev.map((item, i) => (i === index ? result.data : item))
       );
     }
 
     await GetProjectDetail();
   } catch (err) {
-    console.error(
-      "GENERATE UI ERROR:",
-      err
-    );
+    console.error("GENERATE UI ERROR:", err);
   } finally {
     setLoading(false);
+    setTakeScreenShot(true);
     setIsGenerating(false);
   }
 };
@@ -233,31 +219,17 @@ const GenerateScreenUIUX = async () => {
         <SettingsSection
           projectDetail={projectDetail}
           screenDescription={screenConfig[0]?.screenDescription}
+          takeScreenShot={()=>setTakeScreenShot(false)}
+
+          
         />
        
 
         {/* canvas */}
       <Canvas projectDetail={projectDetail} 
       screenConfig={screenConfig}/>
+      takeScreenShot={takeScreenShot}
       </div>
-    </div>
-  );
-}
-
-// Simple local SettingsSection to fix missing reference
-function SettingsSection({
-  projectDetail,
-  screenDescription,
-}: {
-  projectDetail?: projectType & { name?: string };
-  screenDescription?: string;
-}) {
-  return (
-    <div className="w-80 p-4">
-      <h3 className="font-semibold">Settings</h3>
-      <div className="text-sm mt-2">Project: {projectDetail?.name || "-"}</div>
-      <div className="text-sm mt-1">Device: {projectDetail?.device || "-"}</div>
-      <div className="text-sm mt-2">Screen: {screenDescription || "-"}</div>
     </div>
   );
 }
