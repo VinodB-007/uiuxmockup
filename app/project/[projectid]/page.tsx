@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import ProjectHeader from "./_shared/ProjectHeader";
 import SettingsSection from "./_shared/SettingsSection";
 import axios from "axios";
@@ -9,15 +9,18 @@ import { useParams } from "next/navigation";
 import { projectType, screenConfig } from "@/type/types";
 import { LoaderIcon } from "lucide-react";
 import Canvas from "./_shared/Canvas";
+import { SettingContext } from "@/context/SettingContext";
 
 function ProjectCanvasPlayground() {
   const params = useParams();
   const projectId = params.projectId as string;
+  const [isGenerating, setIsGenerating] =
+  useState(false);
 
   const [projectDetail, setProjctDetail] = useState<projectType>();
   const [screenConfigOriginal, setScreenConfigOriginal] = useState<screenConfig[]>([]);
   const [screenConfig, setScreenConfig] = useState<screenConfig[]>([]);
-
+const {settingDetail,setSettingDetail}=useContext(SettingContext);
   const [loading, setLoading] = useState(true);
   const [loadingMsg, setLoadingMsg] = useState("Loading");
 
@@ -50,6 +53,7 @@ const GetProjectDetail = async () => {
     setScreenConfig(
       result.data.ScreenConfig || []
     );
+    setSettingDetail(result.data.projectDetail)
   } catch (error) {
     console.error(
       "GET PROJECT ERROR:",
@@ -59,6 +63,9 @@ const GetProjectDetail = async () => {
     setLoading(false);
   }
 };
+
+
+
 
 useEffect(() => {
   if (!projectDetail) return;
@@ -115,6 +122,7 @@ useEffect(() => {
 // }, [projectDetail, screenConfigOriginal]);
 
 const generateScreenConfig = async () => {
+    console.log("GENERATE CONFIG STARTED");
   try {
     setLoading(true);
     setLoadingMsg("Generating Screen Config...");
@@ -145,29 +153,59 @@ const generateScreenConfig = async () => {
   }
 };
 
-const GenerateScreenUIUX=async()=>{
-  setLoading(true);
-  
-  for (let index=0;index<screenConfig?.length;index++)
-  {
-    const screen=screenConfig[index];
-    if (screen?.code) continue;
-    setLoadingMsg(`Generating Screen ${index + 1}`);
 
-    const result =await axios.post('/api/generate-screen-ui',{
-      projectId,
-      screenId:screen?.screenId,
-      screenName:screen?.screenName,
-      purpose:screen?.purpose,
-      screenDescription:screen?.screenDescription
-    })
-    console.log(result.data)
+const GenerateScreenUIUX = async () => {
+  try {
+    setLoading(true);
 
+    console.log(
+      "TOTAL SCREENS:",
+      screenConfigOriginal.length
+    );
+
+    for (
+      let index = 0;
+      index < screenConfigOriginal.length;
+      index++
+    ) {
+      const screen =
+        screenConfigOriginal[index];
+
+      if (screen?.code) continue;
+
+      setLoadingMsg(
+        `Generating Screen ${index + 1}`
+      );
+
+      await axios.post(
+        "/api/generate-screen-ui",
+        {
+          projectId,
+          screenId: screen.screenId,
+          screenName: screen.screenName,
+          purpose: screen.purpose,
+          screenDescription:
+            screen.screenDescription,
+        }
+      );
+
+      console.log(
+        "SCREEN GENERATED:",
+        screen.screenName
+      );
+    }
+
+    await GetProjectDetail();
+  } catch (err) {
+    console.error(
+      "GENERATE UI ERROR:",
+      err
+    );
+  } finally {
+    setLoading(false);
+    setIsGenerating(false);
   }
-
-
-  setLoading(false)
-}
+};
   return (
     <div>
       <ProjectHeader />

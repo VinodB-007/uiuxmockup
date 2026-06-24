@@ -3,10 +3,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { SettingContext } from "@/context/SettingContext";
 import { THEME_NAME_LIST, THEMES } from "@/data/Themes";
 import { projectType } from "@/type/types";
 import { Camera, Share, Sparkles } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 type props = {
   projectDetail: projectType | undefined;
@@ -19,12 +20,20 @@ function SettingsSection({ projectDetail }: props) {
   const [projectName, setProjectName] = useState("");
 
   const [userNewScreenInput, setUserNewScreenInput] = useState("");
+  const {settingDetail,setSettingDetail}=useContext(SettingContext)
 
-  useEffect(() => {
-    if (projectDetail?.projectName) {
-      setProjectName(projectDetail.projectName);
-    }
-  }, [projectDetail]);
+useEffect(() => {
+  projectDetail && setProjectName(projectDetail.projectName??"");
+  projectDetail && setSelectedTheme(projectDetail.theme as string);
+}, [projectDetail]);
+
+const  onThemeSelect=(theme:string)=>{
+  setSelectedTheme(theme);
+  setSettingDetail((prev:any)=>({
+    ...prev,
+    theme:theme
+  }))
+}
 
   return (
     <div className="w-[300px] h-[90vh] p-5 border-r">
@@ -36,7 +45,12 @@ function SettingsSection({ projectDetail }: props) {
         <input
           placeholder="Project Name"
           value={projectName}
-          onChange={(event) => setProjectName(event.target.value)}
+          onChange={(event) => {setProjectName(event.target.value)
+            setSettingDetail((prev:any)=>({
+    ...prev,
+    projectName:projectName
+  }))
+          }}
         />
       </div>
 
@@ -71,7 +85,7 @@ function SettingsSection({ projectDetail }: props) {
                     ? "border-primary bg-primary/20"
                     : ""
                 }`}
-                onClick={() => setSelectedTheme(theme)}
+                onClick={() => onThemeSelect(theme)}
               >
                 <h2>{theme}</h2>
 

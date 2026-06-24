@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
-import { DM_Sans} from "next/font/google";
 import "./globals.css";
 import {ClerkProvider} from '@clerk/nextjs'
 import Provider from "./provider";
-
-const appFont = DM_Sans({
-  subsets:['latin']
-})
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "UIUX Mockup generator app",
@@ -24,10 +20,9 @@ export default function RootLayout({
       lang="en"
      
     >
-      <body 
-      className={appFont.className}
-      >
+      <body>
         <Provider>{children}</Provider>
+        <Toaster position="top-center"/>
         
         </body>
     </html>
